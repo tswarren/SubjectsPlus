@@ -734,6 +734,11 @@ function saveSetup() {
 
                     var items = $('.sp_section');
                     $.each(items, function (index, obj) {
+                        if ($(obj).parent().children().length == 1){
+                            $(obj).find('.sp_section_controls').hide();
+                        }else{
+                            $(obj).find('.section_remove').show();
+                        }
                         //console.log('index: ' + index + ' obj: ' + $(obj).attr('id'));
                         var newId = "section_" + $(newIds).get(index);
                         //console.log( $(obj).attr('id', newId) );

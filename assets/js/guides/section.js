@@ -121,6 +121,10 @@ function section() {
 			console.log('layout: ' + layout);
 			console.log('tab_id: ' + tab_id);
 
+			console.log(mySection.settings.sectionServicePath);
+			console.log(section_index);
+			console.log(tab_id);
+
 			return $.ajax({
 
 				url : mySection.settings.sectionServicePath,
@@ -133,6 +137,7 @@ function section() {
 				dataType: "json"
 
 			}).done(function() {
+				console.log('doing callback function');
 				mySection.getTabIds();
 				mySection.getSectionIds();
 			});
