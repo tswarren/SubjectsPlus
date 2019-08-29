@@ -556,10 +556,19 @@ function tabs() {
             var current_tab_index = $("#tabs").tabs('option', 'active');
             console.log('current_tab_index init tabs object: ' + current_tab_index);
 
-            $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').trigger('click');
-            $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
-            $('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'block');
-            $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
+            var sections_count = $("#tabs-" + current_tab_index).children().length;
+
+            if (sections_count <= 1){
+                $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
+                $('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'none');
+                $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
+
+            }else{
+                $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').trigger('click');
+                $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
+                $('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'block');
+                $("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
+            }
         },
 
         targetBlankLinks: function () {

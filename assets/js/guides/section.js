@@ -52,8 +52,8 @@ function section() {
 					$(this).children().find('.section_remove').hide();
 				} else {
 					console.log("Only one section?");
-					//$(this).children().find('.sp_section_controls').hide();
-					//$(this).find('.sp_section').removeClass('section_selected_area');
+					$(this).children().find('.sp_section_controls').hide();
+					$(this).find('.sp_section').removeClass('section_selected_area');
 
 				}
 			});
@@ -61,12 +61,19 @@ function section() {
 		highlightFirstSectionControls : function () {
 			var current_tab_index = $("#tabs").tabs('option', 'active');
 			console.log('current_tab_index section object: ' + current_tab_index);
+			var sections_count = $("#tabs-" + current_tab_index).children().length;
 
-			$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').trigger('click');
-			$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
-			$('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'block');
-			$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
+			if (sections_count <= 1){
+				$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
+				$('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'none');
+				$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
 
+			}else{
+				$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').trigger('click');
+				$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').addClass('sp_section_selected');
+				$('#tabs-' + current_tab_index).find('.sp_section_controls').css('display', 'block');
+				$("#tabs-" + current_tab_index).children().first().find('.sp_section_controls').parent('div').addClass('section_selected_area');
+			}
 		},
 		makeAddSection : function(lstrSelector) {
 
@@ -83,8 +90,12 @@ function section() {
 				var layout = "4-4-4";
 
 				var newSection = mySection.addNewSection(section_index, layout, tab_id);
+				console.log("New section");
+				console.log(newSection);
 				newSection.then(function(data) {
 					var last_insert_id = data.last_insert;
+					console.log("Last insert id");
+					console.log(last_insert_id);
 				});
 				newSection.then(function(data) {
 
@@ -138,9 +149,12 @@ function section() {
 
 			}).done(function() {
 				console.log('doing callback function');
+
 				mySection.getTabIds();
 				mySection.getSectionIds();
-			});
+			}).fail(function(xhr) {
+				console.log('error', xhr);
+			});;
 
 		},
 
