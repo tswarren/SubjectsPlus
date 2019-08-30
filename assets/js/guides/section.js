@@ -84,10 +84,16 @@ function section() {
 				//$(tabs).tabs();
 				var selectedTab = $('#tabs').tabs('option', 'active');
 
+				console.log('Selected tab');
+				console.log(selectedTab);
+
 				var tab_id = $("[aria-controls='tabs-"+ selectedTab +"']").attr("id");
 				var section_index_value = $('#tabs-' + selectedTab + ' .sp_section').last();
 				var section_index = section_index_value.prevObject.last().index() + 1;
 				var layout = "4-4-4";
+
+				console.log('tab id from aria');
+				console.log(tab_id);
 
 				var newSection = mySection.addNewSection(section_index, layout, tab_id);
 				console.log("New section");
@@ -153,7 +159,7 @@ function section() {
 				mySection.getTabIds();
 				mySection.getSectionIds();
 			}).fail(function(xhr) {
-				console.log('error', xhr);
+				console.log('error', xhr.responseText);
 			});;
 
 		},
