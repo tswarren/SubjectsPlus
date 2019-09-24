@@ -66,11 +66,13 @@ abstract class WebService
 					$databases_count = count($lobjResults);
 					for ($i=0;$i<$databases_count; $i= $i + 1){
 						$database = $lobjResults[$i];
-						$access_restriction = (int) $database['access_restrictions'];
-						if ($access_restriction != 1){
-							$database['location'] = $proxyURL.$database['location'];
+						if (isset($database['access_restrictions'])){
+							$access_restriction = (int) $database['access_restrictions'];
+							if ($access_restriction == 2 || $access_restriction == 3){
+								$database['location'] = $proxyURL.$database['location'];
+							}
+							$lobjResults[$i] = $database;
 						}
-						$lobjResults[$i] = $database;
 					}
 				}
 			}
