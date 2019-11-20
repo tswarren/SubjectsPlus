@@ -10,7 +10,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * Time: 11:01 AM
  */
 
-include('config.php');
+include ("../includes/config.php");
 include_once (SP_PATH . "/lib/SubjectsPlus/Control/Querier.php");
 include_once (SP_PATH . "/lib/SubjectsPlus/Control/Stats/Stats.php");
 

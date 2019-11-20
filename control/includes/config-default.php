@@ -562,6 +562,7 @@ $lti_instructors_dir_path = '';
 $lti_courses_dir_path = '';
 $lti_service_account_username = '';
 $lti_service_account_password = '';
+define( 'SP_PATH', dirname(__FILE__) . '/../../' );
 
 ////////////////////////////////////////////
 //Questionpoint Chat settings
