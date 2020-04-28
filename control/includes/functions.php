@@ -86,13 +86,10 @@ function isCool( $emailAdd = "", $password = "", $shibboleth = false ) {
 
 		$user = $result;
 		if ( is_array( $user ) ) {
-
-            var_dump($user);
             //set session variables
 			session_start();
 			session_regenerate_id();
-
-			//var_dump($user);
+			
             // Create session vars for the basic types
             //staff_id, ip, fname, lname, email, user_type_id, ptags, extra
 			$_SESSION['checkit']      = md5( $user[0][4] ) . $salt;
