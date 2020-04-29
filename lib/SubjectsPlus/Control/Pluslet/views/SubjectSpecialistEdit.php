@@ -90,10 +90,10 @@
 //
 //        $('#editor-specialist-container').append(editor.updateElement());
 
-        $('body').on('click', '#save_guide', function(){
-
-            window.location.reload();
-
-        });
+        // $('body').on('click', '#save_guide', function(){
+        //
+        //     window.location.reload();
+        //
+        // });
 
     </script>
