@@ -64,7 +64,7 @@ class SubjectDatabase implements OutputInterface
 
         if ($rank_id) {
             $this->updateDescriptionOverride($rank_id, $description_override);
-        }else{
+        } else {
             $this->insert($title_id, $subject_id, $description_override);
         }
     }
@@ -88,7 +88,7 @@ VALUES (0,:subject_id,:title_id, 1, :description_override, 1)");
         $statement->execute();
     }
 
-    public function saveDescriptionOverride ($subject_id, $title_id, $description_override){
+    public function saveDescriptionOverrides ($subject_id, $title_id, $description_override){
         $rank_id = $this->getRankId($subject_id, $title_id);
 
         if ($rank_id) {
@@ -137,16 +137,31 @@ FROM rank r, location_title lt, location l, title t
         $this->databases = $databases;
     }
 
-    public function getDescriptionOverride($subject_id, $title_id) {
+    public function getDescriptionOverrides($subject_id, $title_ids) {
+        $joined_array = join(',', $title_ids);
 
-        $statement = $this->connection->prepare("SELECT description_override, rank_id FROM rank
-                    WHERE subject_id = :subject_id
-                    AND title_id = :title_id"
-        );
-        $statement->bindParam ( ":subject_id", $subject_id );
-        $statement->bindParam ( ":title_id", $title_id );
+        // Below query is not using param binding for IN() condition because incoming array
+        // of Record IDs has already been scrubbed to ensure it consists of only ints
+        $query =
+            "SELECT
+                description_override,
+                rank_id,
+                title_id,
+                subject_id
+            FROM
+                rank
+            WHERE
+                subject_id = :subject_id
+                AND
+                title_id IN ($joined_array)
+            ";
+
+        $statement = $this->connection->prepare($query);
+        $statement->bindParam(":subject_id", $subject_id);
+
         $statement->execute();
         $databases = $statement->fetchAll();
+
         $this->databases = $databases;
     }
 

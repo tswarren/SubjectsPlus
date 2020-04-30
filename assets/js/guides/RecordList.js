@@ -1,134 +1,222 @@
 /// <reference path="scripts/typings/jquery/jquery.d.ts" />
 var Record = (function () {
     function Record(settings) {
+
         this.location = settings.location;
+        
         if (settings.tokenString) {
-            this.tokenString = settings.tokenString;
-            //console.log('tokenString: ' + this.tokenString);
-            //console.log('prefix: ' + this.prefix);
-            var splitToken = settings.tokenString.split("{").join('').split("}").join('').split(',');
-            this.recordId = splitToken[1];
-            this.prefix = "";
-            this.title = splitToken[2];
-            this.displayOptions = splitToken[3];
-            var optionsArray = this.displayOptions.toString().split('').map(Number);
-            this.showIcons = optionsArray[0];
-            this.showNote = optionsArray[1];
+            this.tokenString     = settings.tokenString;
+            var splitToken       = settings.tokenString.split("{").join('').split("}").join('').split(',');
+            this.recordId        = splitToken[1];
+            this.prefix          = "";
+            this.title           = splitToken[2];
+            this.displayOptions  = splitToken[3];
+            var optionsArray     = this.displayOptions.toString().split('').map(Number);
+            this.showIcons       = optionsArray[0];
+            this.showNote        = optionsArray[1];
             this.showDescription = optionsArray[2];
         }
         else {
-            this.recordId = settings.recordId;
-            this.title = settings.title;
-            this.prefix = settings.prefix;
-            //console.log('prefix: ' + this.prefix);
+            this.recordId       = settings.recordId;
+            this.title          = settings.title;
+            this.prefix         = settings.prefix;
             this.displayOptions = settings.displayOptions;
-            settings.showIcons === undefined ? this.showIcons = 0 : this.showIcons = settings.showIcons;
-            settings.showNote === undefined ? this.showNote = 0 : this.showNote = settings.showNote;
+
+            settings.showIcons === undefined       ? this.showIcons = 0 : this.showIcons = settings.showIcons;
+            settings.showNote === undefined        ? this.showNote = 0 : this.showNote = settings.showNote;
             settings.showDescription === undefined ? this.showDescription = 0 : this.showDescription = settings.showDescription;
-        }
-    }
+        };
+    };
+
     Record.prototype.getRecordToken = function () {
         var displayOptions = "" + this.showIcons + this.showDescription + this.showNote;
-        return "{{dab},{" + this.recordId + "},{" + this.title + "},{" + displayOptions + "}}";
+        const assembledToken = `{{dab},{${this.recordId}},{${this.title}},{${displayOptions}}}`;
+
+        return assembledToken;
     };
+
     return Record;
 }());
+
 var RecordList = (function () {
     function RecordList() {
         this.recordList = [];
-    }
+    };
+
     RecordList.prototype.addToList = function (record) {
         this.recordList.push(record);
     };
+
     RecordList.prototype.getList = function () {
         return this.recordList;
     };
+
     RecordList.prototype.removeFromList = function (index) {
         this.recordList.splice(index, 1);
     };
+
     return RecordList;
 }());
+
 var RecordListSortable = (function () {
     function RecordListSortable(recordList) {
         this.recordList = recordList;
-    }
-    RecordListSortable.prototype.getList = function () {
+    };
+
+    RecordListSortable.prototype.getListHtml = function () {
         var recordListHtml = this.liSortableRecordList();
         return "<ul class=\"db-list-results ui-sortable\" id=\"db-list-results\">" + recordListHtml + "</ul>";
     };
+
     RecordListSortable.prototype.sortableToggleSpan = function (toggleClass, active, label) {
-        var toggleSpanHtml;
-        var checkIcon;
-        active === true ? checkIcon = "<i class='fa fa-check'></i>" : checkIcon = "<i class='fa fa-minus' ></i> ";
-        toggleSpanHtml = "<span class='" + toggleClass + " db-list-toggle'>" + checkIcon + " " + label + "</span>";
-        return toggleSpanHtml;
+        var checkIcon = ( active ? 'check' : 'minus' );
+        const checkHtml = `<i class='fa fa-${checkIcon}'></i>`;
+        
+        return `<span class='${toggleClass} db-list-toggle'>${checkHtml} ${label}</span>`;
     };
 
 
-
-    RecordListSortable.prototype.liSortableRecord = function (record) {
-        var showIconToggle;
-        var showDescriptionToggle;
-        var showNotesToggle;
-        var title_id = record.recordId;
+    /**
+     * Fetches description overrides from DB, then builds 'meat' of sortable/draggable RecordList -- ie. all the <li> tags inside the <ul>.
+     * @param {RecordList} recordsArray Takes an array of Record objects.
+     * @returns String concatenating all RecordList <li> items.
+     */
+    RecordListSortable.prototype.liSortableRecord = function (recordsArray) {
         var subject_id = $('#guide-parent-wrap').attr("data-subject-id");
-        var rank_id;
-        var description_override = '';
-        //console.log(record.prefix);
+
+        // Updated subject_databases_helper.php action will accept array of record IDs as just ints
+        const onlyIds = recordsArray.map((record) => record.recordId);
+        const existingRecordList = this.recordList.recordList;
+
+        let html = '';
+        const that = this;
 
         $.ajax({
             url: '../records/helpers/subject_databases_helper.php',
             type: "GET",
             dataType: "json",
             data: {
-                'action': 'getDescriptionOverride',
+                'action': 'getDescriptionOverrides',
                 'subject_id': subject_id,
-                'title_id': title_id
+                'record_ids': onlyIds
             },
             async: false,
-            success: function (data) {
+            success: (data) => {
                 var databases = data.databases;
-                $.each(databases, function (index, obj) {
-                    if (obj.description_override)
-                        description_override = obj.description_override;
-                    rank_id = obj.rank_id;
-                });
+                const mergedArray = [];
+
+                for (const item of existingRecordList) {
+                    const itemInBoth = databases.find((dbItem) => {
+                        return Number(dbItem.title_id) === Number(item.recordId);
+                    });
+
+                    if (itemInBoth) {
+                        mergedArray.push({...itemInBoth, ...item});
+                    } else {
+                        mergedArray.push(item);
+                    };
+                };
+
+                for (const record of mergedArray) {
+                    const recordLi = that.buildSortableRecordItem(record);
+                    if (recordLi) {
+                        html += recordLi;
+                    };
+                };
             }
         });
 
-        var textArea = "<textarea class='link-list-description-override-textarea' style='clear: both; display: none' rows='4' cols='35'></textarea></span>";
-        if (rank_id){
-            textArea = "<textarea id='description-override-textarea" + rank_id + "' title_id='"+title_id+"' subject_id='"+subject_id+"' class='link-list-description-override-textarea' style='clear: both; display: none' rows='4' cols='35'>"+description_override+"</textarea>";
-        }
+        return html;
+    };
 
-        var descriptionOverrideButton = "<button class='db-list-item-description-override pure-button pure-button-secondary' title='Edit description'><i class='fa fa-pencil'></i></button>";
+    RecordListSortable.prototype.buildSortableRecordItem = function(record) {
+        // Return and don't build sortable li because this title is an 'orphan'
+        if (!record.title) {
+            return;
+        };
 
-        if (description_override.trim()){
-            descriptionOverrideButton = "<button class='db-list-item-description-override pure-button pure-button-secondary active' title='Edit description'><i class='fa fa-pencil'></i></button>";
-        }
+        if (record.description_override) {
+            description_override = record.description_override.trim();
+        };
 
-        (record.showIcons === 1) ? showIconToggle = this.sortableToggleSpan('show-icons-toggle', true, 'Icons') : showIconToggle = this.sortableToggleSpan('show-icons-toggle', false, 'Icons');
-        (record.showDescription === 1) ? showDescriptionToggle = this.sortableToggleSpan('show-description-toggle', true, 'Description') : showDescriptionToggle = this.sortableToggleSpan('show-description-toggle', false, 'Description');
-        (record.showNote === 1) ? showNotesToggle = this.sortableToggleSpan('include-note-toggle', true, 'Note') : showNotesToggle = this.sortableToggleSpan('include-note-toggle', false, 'Note');
-        var liRecordHtml = "<li class='db-list-item-draggable' data-location='" + record.location + "'  \n " +
-            "data-record-id='" + record.recordId + "' data-title='" + record.title + "' data-show-icons='" + record.showIcons + "'" +
-            " data-show-note='" + record.showNote + "' data-show-description='" + record.showDescription + "'>             " +
-            "<span class='db-list-label'>" + record.title + "</span>  " +
-             descriptionOverrideButton +
-            "<button class=\"db-list-remove-item pure-button pure-button-secondary\" title=\"Remove from list\"><i class='fa fa-remove'></i></button>\n <div>" + showIconToggle + showNotesToggle + " " + showDescriptionToggle + " </div> " +
-             textArea + "</span>" +
-            "</li>";
+        // I don't know what this </span> tag below is closing, but leaving it in. ¯\_(ツ)_/¯ -Ali
+        let textArea = `
+            <textarea
+                class='link-list-description-override-textarea'
+                style='clear: both; display: none'
+                rows='4'
+                cols='35'>
+            </textarea>
+            </span>
+        `;
+        
+        if (record.rank_id) {
+            textArea = `
+                <textarea
+                    id='description-override-textarea${record.rank_id}'
+                    title_id='${record.title_id}'
+                    subject_id='${record.subject_id}'
+                    class='link-list-description-override-textarea'
+                    style='clear: both; display: none'
+                    rows='4'
+                    cols='35'>${
+                        record.description_override ? 
+                        (record.description_override).trim() : ''
+                    }</textarea>
+            `;
+        };
+
+        let overrideClass = '';
+
+        if ( record.description_override ) {
+            overrideClass = 'active';
+        };
+
+        let descriptionOverrideButton = `
+            <button
+                class='db-list-item-description-override pure-button pure-button-secondary ${overrideClass}'
+                title='Edit description'>
+                    <i class='fa fa-pencil'></i>
+            </button>
+        `;
+
+        const iconToggleBoolean      = (record.showIcons === 1);
+        const showIconToggle         = this.sortableToggleSpan('show-icons-toggle', iconToggleBoolean, 'Icons');
+
+        const showDescriptionBoolean = (record.showDescription === 1);
+        const showDescriptionToggle  = this.sortableToggleSpan('show-description-toggle', showDescriptionBoolean, 'Description');
+
+        const showNotesBoolean       = (record.showNote === 1);
+        const showNotesToggle        = this.sortableToggleSpan('include-note-toggle', showNotesBoolean, 'Note');
+        
+        const liRecordHtml = 
+            `<li
+                class='db-list-item-draggable'
+                data-location="${                   record.location}"
+                data-record-id="${                  record.recordId}"
+                data-title="${                      record.title}"
+                data-show-icons="${                 record.showIcons}"
+                data-show-note="${                  record.showNote}"
+                data-show-description="${           record.showDescription}">
+                    <span class='db-list-label'>${  record.title}</span>
+                    ${descriptionOverrideButton}
+                    <button
+                        class='db-list-remove-item pure-button pure-button-secondary'
+                        title='Remove from list'>
+                            <i class='fa fa-remove'></i>
+                    </button>
+                    <div>
+                        ${showIconToggle} ${showNotesToggle} ${showDescriptionToggle}
+                    </div>
+                    ${textArea}
+                    </span>
+            </li>`;
+
         return liRecordHtml;
     };
+
     RecordListSortable.prototype.liSortableRecordList = function () {
-        var liRecordListHtml = '';
-        for (var i = 0; i < this.recordList.recordList.length; i++) {
-            if (this.recordList.recordList[i] != undefined) {
-                var sortableLi = this.recordList.recordList[i];
-                liRecordListHtml += this.liSortableRecord(sortableLi);
-            }
-        }
-        return liRecordListHtml;
+        return this.liSortableRecord(this.recordList.recordList);
     };
     return RecordListSortable;
 }());
@@ -142,16 +230,26 @@ var RecordListDisplay = (function () {
     };
     RecordListDisplay.prototype.liDisplayRecord = function (record) {
         var token = record.getRecordToken();
-        console.log('token: ' + token);
-        return "<li data-location='" + record.location + "' data-record-id='" + record.recordId + "' data-title='" + record.title + "' data-show-icons='" + record.showIcons + "'              data-show-description='" + record.showDescription + "' data-show-note='" + record.showNote + "' data-prefix='" + record.prefix + "'>" + token + "</li>";
+        return `
+            <li
+                data-location="${           record.location}"
+                data-record-id="${          record.recordId}"
+                data-title="${              record.title}"
+                data-show-icons="${         record.showIcons}"
+                data-show-description="${   record.showDescription}"
+                data-show-note="${          record.showNote}"
+                data-prefix="${             record.prefix}">
+                    ${token}
+            </li>`;
     };
     RecordListDisplay.prototype.liDisplayRecordList = function () {
         var liRecordListHtml = '';
         for (var i = 0; i < this.recordList.recordList.length; i++) {
             if (this.recordList.recordList[i] !== undefined) {
-                liRecordListHtml += this.liDisplayRecord(this.recordList.recordList[i]);
-            }
-        }
+                const thisLiHtml = this.liDisplayRecord(this.recordList.recordList[i]);
+                liRecordListHtml += thisLiHtml;
+            };
+        };
         return liRecordListHtml;
     };
     return RecordListDisplay;
@@ -161,7 +259,35 @@ var RecordListSearch = (function () {
         this.recordList = recordList;
     }
     RecordListSearch.prototype.liRecordList = function (record) {
-        return "<li class=\"db-list-item database-listing\" data-location='" + record.location + "' data-record-id='" + record.recordId + "' data-title=\"" + record.title  + "\"   data-show-icons='" + record.showIcons + "'              data-show-note='" + record.showNote + "' data-show-description='" + record.showDescription + "'  data-prefix='" + record.prefix + "'>             <span class=\"list-search-label\" title=\"" + record.title + "\">" + record.title + "</span>\n <button class=\"add-to-list-button pure-button pure-button-secondary\" title=\"Add to list\"> <i class=\"fa fa-plus\"></i></button>                          <div class=\"db-list-item-link\"><a href='" + record.location + "' target='_blank'>" + record.location + "</a></div>             </li>";
+        return `
+            <li
+                class="db-list-item database-listing"
+                data-location="${           record.location}"
+                data-record-id="${          record.recordId}"
+                data-title="${              record.title}"
+                data-show-icons="${         record.showIcons}"
+                data-show-note="${          record.showNote}"
+                data-show-description="${   record.showDescription}"
+                data-prefix="${             record.prefix}">
+                    <span
+                        class="list-search-label"
+                        title="${record.title}">
+                            ${record.title}
+                    </span>
+                    <button
+                        class="add-to-list-button pure-button pure-button-secondary"
+                        title="Add to list">
+                            <i
+                            class="fa fa-plus">
+                            </i>
+                    </button>
+                    <div class="db-list-item-link">
+                        <a
+                            href="${record.location}"
+                            target='_blank'>${record.location}
+                        </a>
+                    </div>
+            </li>`;
     };
     RecordListSearch.prototype.liDisplayRecordList = function () {
         var liRecordListHtml = '';
@@ -190,17 +316,24 @@ var RecordSearch = (function () {
         this.searchResults = new RecordList;
         $.ajax({
             "url": this.searchUrl,
-            "data": { term: searchTerm, collection: collection, limit_results_number: 1 }
+            "data": {
+                term: searchTerm,
+                collection: collection,
+                limit_results_number: 1
+            }
         }).done(function (data) {
             callback(data);
-            console.log(data);
         }).fail(function (data) {
             console.log("Unable to perform search");
         });
     };
     RecordSearch.prototype.searchResultRecord = function (searchResult) {
-        console.log('searchresult: ' + searchResult.prefix);
-        return new Record({ recordId: searchResult.id, title: searchResult.label, prefix: searchResult.prefix, location: searchResult['location_url'] });
+        return new Record({
+            recordId:   searchResult.id,
+            title:      searchResult.label,
+            prefix:     searchResult.prefix,
+            location:   searchResult['location_url']
+        });
     };
     return RecordSearch;
 }());
