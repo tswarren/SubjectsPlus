@@ -1,5 +1,5 @@
 <ifModule mod_headers.c>
-    <filesMatch "\.(js)$">
+    <filesMatch "\.(js|php)$">
         Header set Cache-Control "no-cache, must-revalidate, max-age=0, no-store"
     </filesMatch>
 </ifModule>
