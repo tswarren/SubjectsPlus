@@ -89,25 +89,25 @@ function isCool( $emailAdd = "", $password = "", $shibboleth = false ) {
             //set session variables
 			session_start();
 			session_regenerate_id();
-
+			
             // Create session vars for the basic types
             //staff_id, ip, fname, lname, email, user_type_id, ptags, extra
-            $_SESSION['checkit']      = md5( $user['email'] ) . $salt;
-            $_SESSION['staff_id']     = $user['staff_id'];
-            //$_SESSION['ok_ip']        = $user[0][1]; // this seems to be causing an undefined index error
-            $_SESSION['fname']        = $user['fname'];
-            $_SESSION['lname']        = $user['lname'];
-            $_SESSION['email']        = $user['email'];
-            $_SESSION['user_type_id'] = $user['user_type_id'];
+			$_SESSION['checkit']      = md5( $user[0][4] ) . $salt;
+			$_SESSION['staff_id']     = $user[0][0];
+			//$_SESSION['ok_ip']        = $user[0][1]; // this seems to be causing an undefined index error
+			$_SESSION['fname']        = $user[0][2];
+			$_SESSION['lname']        = $user[0][3];
+			$_SESSION['email']        = $user[0][4];
+			$_SESSION['user_type_id'] = $user[0][5];
 
             // unpack our extra
-            if ( $user['extra'] != null ) {
-                $jobj            = json_decode( $user['extra'] );
-                $_SESSION['css'] = $jobj->{'css'};
-            }
+			if ( $user[0][7] != null ) {
+				$jobj            = json_decode( $user[0][7] );
+				$_SESSION['css'] = $jobj->{'css'};
+			}
 
-            // unpack our ptags
-            $current_ptags = explode( "|", $user['ptags'] );
+// unpack our ptags
+			$current_ptags = explode( "|", $user[0][6] );
 
 			foreach ( $current_ptags as $value ) {
 				$_SESSION[ $value ] = 1;
