@@ -1,0 +1,5 @@
+<ifModule mod_headers.c>
+    <filesMatch "\.(js)$">
+        Header set Cache-Control "no-cache, must-revalidate, max-age=0, no-store"
+    </filesMatch>
+</ifModule>
