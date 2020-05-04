@@ -71,15 +71,20 @@ if( (isset($this->_linkText)) && (!empty($this->_linkText)) ) {
             <div class="modal-subs">
 
                 <h3>Selected Records</h3>
-                <span class="db-list-input-label">Show all: </span> 
-                <input type="checkbox" name="show_all_icons_input" id="show_all_icons_input" class="pure-checkbox"> <span class="db-list-input-label"> Icons </span>
-                <input type="checkbox" name="show_all_desc_input" id="show_all_desc_input" class="pure-checkbox"> <span class="db-list-input-label">Descriptions</span>
-                <input type="checkbox" name="show_all_notes_input" id="show_all_notes_input" class="pure-checkbox"> <span class="db-list-input-label">Notes</span>
+                <span class="db-list-input-label">Show all: </span>
+                <input type="checkbox" name="show_all_icons_input" id="show_all_icons_input" class="pure-checkbox">
+                <span class="db-list-input-label" for="show_all_icons_input"> Icons </span>
+                
+                <input type="checkbox" name="show_all_desc_input" id="show_all_desc_input" class="pure-checkbox">
+                <span class="db-list-input-label" for="show_all_desc_input">Descriptions</span>
+                
+                <input type="checkbox" name="show_all_notes_input" id="show_all_notes_input" class="pure-checkbox">
+                <span class="db-list-input-label" for="show_all_notes_input">Notes</span>
 
                 <!--buttons-->
                 <div class="records-sort">
                     <button class="pure-button pure-button-secondary" id="sort-list-alpha-btn">Sort List Alphabetically</button>
-                    <button class="pure-button pure-button-secondary dblist-reset-button">Reset List Box</button>
+                    <button class="pure-button pure-button-secondary dblist-reset-button"><?php echo _('Delete All Items'); ?></button>
                 </div>
 
 
@@ -187,13 +192,8 @@ if( (isset($this->_linkText)) && (!empty($this->_linkText)) ) {
 
 
     $( document ).ready(function() {
-
-
         LinkList();
-
-
         var linkText = $('#link-text').children().html();
-
 
         if(CKEDITOR.instances['link-list-textarea']) {
 

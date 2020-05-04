@@ -86,17 +86,15 @@ function isCool( $emailAdd = "", $password = "", $shibboleth = false ) {
 
 		$user = $result;
 		if ( is_array( $user ) ) {
-
-
             //set session variables
 			session_start();
 			session_regenerate_id();
-
-			//var_dump($user);
+			
             // Create session vars for the basic types
+            //staff_id, ip, fname, lname, email, user_type_id, ptags, extra
 			$_SESSION['checkit']      = md5( $user[0][4] ) . $salt;
 			$_SESSION['staff_id']     = $user[0][0];
-			$_SESSION['ok_ip']        = $user[0][1];
+			//$_SESSION['ok_ip']        = $user[0][1]; // this seems to be causing an undefined index error
 			$_SESSION['fname']        = $user[0][2];
 			$_SESSION['lname']        = $user[0][3];
 			$_SESSION['email']        = $user[0][4];
